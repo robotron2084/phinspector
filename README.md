@@ -12,6 +12,7 @@ Features:
  * Click 'Open in New Scene' to create a new scene and put the current prefab in it.
  * Maintains a list of recently used prefabs.
  * Arrow keys to navigate the hierarchy.
+ * Drag support.
  * All data is remembered between restarts.
 
 [This is part of the Enemy Hideout Code Archive](http://enemyhideout.com/2016/05/free-code-from-the-hideout/)

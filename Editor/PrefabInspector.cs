@@ -418,6 +418,17 @@ public class PrefabInspector : EditorWindow
       mouseEvent = null;
     }
 
+    if(e.type == EventType.MouseDrag)
+    {
+      ObjectView currentView = prefabSet.currentInfo.GetView(prefabSet.currentInfo.currentID);
+      if(currentView.obj){
+        DragAndDrop.PrepareStartDrag();
+        DragAndDrop.objectReferences = new UnityEngine.Object[]{ currentView.obj };
+        DragAndDrop.StartDrag(currentView.obj.ToString());
+        e.Use();
+      }
+    }
+
     /**
      * If we select a new prefab this frame (such as through Recently Used or 
      * dragging a new one into the object field) then this will be set and we 
@@ -495,7 +506,7 @@ public class PrefabInspector : EditorWindow
       displayObject(prefabSet.currentPrefab, 0, null);
       if(setNewObject)
       {
-        //we have now drawn the diplay and have wired up our object views for 
+        //we have now drawn the display and have wired up our object views for 
         // known objects. We have also set a new object this frame.
         // Lets traverse our views, looking for an object that may correspond to
         // a selected object.
@@ -697,7 +708,6 @@ public class PrefabInspector : EditorWindow
   public void Persist()
   {
     string path = Application.persistentDataPath + serializationPath;
-    Debug.Log("[PrefabSet] Path:"+path); 
     SerializationUtil.Serialize(path, prefabSet);
   }
 
