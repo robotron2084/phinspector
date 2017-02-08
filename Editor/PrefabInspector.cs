@@ -1,4 +1,6 @@
 using UnityEngine;
+using UnityEngine.SceneManagement;
+using UnityEditor.SceneManagement;
 using UnityEditor;
 using System.Text;
 using System.Reflection;
@@ -375,6 +377,13 @@ public class PrefabInspector : EditorWindow
 
   void OnDisable()
   {
+    //If the prefab inspector is never shown, upon recompile this will be called 
+    // but since OnGUI was never called this will cause a null ref.
+    if(!_initialized)
+    {
+      // Since we didn't do anything, just exit.
+      return;
+    }
     //GC our texture, since we have to set HideAndDontSave
     DestroyImmediate(selectedObject.normal.background);
     Persist(); //save to disk all our shtuff.
@@ -482,18 +491,18 @@ public class PrefabInspector : EditorWindow
     GUI.enabled = prefabSet.currentPrefab != null;
     if(GUILayout.Button("Open In New Scene"))
     {
-      if(EditorApplication.isSceneDirty)
+      if(EditorSceneManager.SaveCurrentModifiedScenesIfUserWantsTo())
       {
-        EditorApplication.SaveCurrentSceneIfUserWantsTo();
-      } 
-      EditorApplication.NewScene();
-      GameObject go = (GameObject)PrefabUtility.InstantiatePrefab(prefabSet.currentPrefab);
-      ObjectView currentView = prefabSet.currentInfo.GetView(prefabSet.currentInfo.currentID);
-      if(currentView != null && currentView.obj != null)
-      {
-        UnityEngine.Object prefabParent = currentView.obj;
-        GameObject selection = FindSelection(go, prefabParent);
-        Selection.activeTransform = selection.transform;
+        Scene tmpScene = EditorSceneManager.NewScene(NewSceneSetup.EmptyScene, NewSceneMode.Additive);
+        GameObject go = (GameObject)PrefabUtility.InstantiatePrefab(prefabSet.currentPrefab);
+        ObjectView currentView = prefabSet.currentInfo.GetView(prefabSet.currentInfo.currentID);
+        if(currentView != null && currentView.obj != null)
+        {
+          UnityEngine.Object prefabParent = currentView.obj;
+          GameObject selection = FindSelection(go, prefabParent);
+          Selection.activeTransform = selection.transform;
+        }
+        EditorSceneManager.MarkSceneDirty(tmpScene);
       }
     }
     GUI.enabled = true;
