@@ -360,6 +360,11 @@ public class PrefabInspector : EditorWindow
   GUIStyle foldoutOpen;
   GUIStyle foldoutClosed;
 
+  // The object that received the last 'down' event is the object that should be
+  // dragged.dragObject
+  UnityEngine.Object dragObject;
+  Vector2 lastDownPosition;
+
   //TODO: kb shortcut?
   [MenuItem ("Window/Prefab Inspector")]
   static void Init () 
@@ -420,20 +425,25 @@ public class PrefabInspector : EditorWindow
 
     // Get our event info.
     Event e = Event.current;
-    if(e.type == EventType.MouseDown)
+    if(e.type == EventType.MouseDown || e.type == EventType.MouseUp)
     {
       mouseEvent = e;
     }else{
       mouseEvent = null;
     }
+    if(e.type == EventType.MouseDown)
+    {
+      lastDownPosition = e.mousePosition;
+    }
 
     if(e.type == EventType.MouseDrag)
     {
-      ObjectView currentView = prefabSet.currentInfo.GetView(prefabSet.currentInfo.currentID);
-      if(currentView.obj){
+      Vector2 downDelta = lastDownPosition - e.mousePosition;
+      // Debug.Log("[PrefabSet] e.delta.sqrMagnitude: "+downDelta.sqrMagnitude);
+      if(dragObject && downDelta.sqrMagnitude > 100.0f){
         DragAndDrop.PrepareStartDrag();
-        DragAndDrop.objectReferences = new UnityEngine.Object[]{ currentView.obj };
-        DragAndDrop.StartDrag(currentView.obj.ToString());
+        DragAndDrop.objectReferences = new UnityEngine.Object[]{ dragObject };
+        DragAndDrop.StartDrag(dragObject.name);
         e.Use();
       }
     }
@@ -462,6 +472,7 @@ public class PrefabInspector : EditorWindow
           {
             prefabSet.Select(prefab);
             setNewObject = true;
+            Repaint();
           }else{
             // no prefab found! not cool.
             Debug.Log("[Prefab Inspector] Looks like that prefab doesn't exist. Perhaps it was deleted or moved. Removing from our list....");
@@ -633,10 +644,16 @@ public class PrefabInspector : EditorWindow
       bool arrowClicked = GUILayout.Button(GUIContent.none, arrowStyle, GUILayout.Width(  buttonWidth));
       GUILayout.Label(obj.name);
       EditorGUILayout.EndHorizontal();
-      if(mouseEvent != null && r.Contains(mouseEvent.mousePosition))
+      if(mouseEvent != null && r.Contains(mouseEvent.mousePosition) && mouseEvent.type == EventType.MouseUp)
       {
         Selection.activeObject = obj;
         info.currentID = view.localID;
+        Repaint();
+      }
+
+      if(mouseEvent != null && r.Contains(mouseEvent.mousePosition) && mouseEvent.type == EventType.MouseDown)
+      {
+        dragObject = obj;
         Repaint();
       }
 
